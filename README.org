@@ -1,0 +1,10 @@
+* guix custom
+
+agaric's unofficial packages for guix.
+
+/Warning: may contain nonfree (ie. [[https://www.gnu.org/distros/free-system-distribution-guidelines.html][FSDG]] non-compliant) software./
+
+- libevdevc (needed by xf86-input-cmt)
+- libgestures (needed by xf86-input-cmt)
+- /WIP:/ qt5ct
+- xf86-input-cmt

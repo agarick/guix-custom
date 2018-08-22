@@ -30,21 +30,20 @@
       ("xorgproto" ,xorgproto)))
    (arguments
     `(#:configure-flags
-      (list (string-append "--with-sdkdir="
-			   %output
-			   "/include/xorg"))
-      #:phases (modify-phases %standard-phases
-      (add-after 'unpack 'fix-deps
-        (lambda* (#:key inputs #:allow-other-keys)
-          (let ((evd (assoc-ref inputs "libevdevc"))
-                (ges (assoc-ref inputs "libgestures")))
-            (setenv "C_INCLUDE_PATH"
-                    (string-append
-                      (getenv "C_INCLUDE_PATH") ":" evd "/include:" ges "/usr/include"))
-            (setenv "LIBRARY_PATH"
-                    (string-append
-                      (getenv "LIBRARY_PATH") ":" evd "/usr/lib:" ges "/usr/lib"))
-            #t))))))
+      (list (string-append "--with-sdkdir=" %output "/include/xorg"))
+      #:phases
+      (modify-phases %standard-phases
+        (add-after 'unpack 'fix-deps
+                   (lambda* (#:key inputs #:allow-other-keys)
+                            (let ((evd (assoc-ref inputs "libevdevc"))
+                                  (ges (assoc-ref inputs "libgestures")))
+                              (setenv "C_INCLUDE_PATH"
+                                      (string-append
+                                        (getenv "C_INCLUDE_PATH") ":" evd "/include:" ges "/usr/include"))
+                              (setenv "LIBRARY_PATH"
+                                      (string-append
+                                        (getenv "LIBRARY_PATH") ":" evd "/usr/lib:" ges "/usr/lib"))
+                              #t))))))
    (home-page "https://github.com/hugegreenbug/xf86-input-cmt")
    (synopsis "chromiumos touchpad driver for linux")
    (description "chromiumos touchpad driver for linux")
@@ -64,17 +63,18 @@
    (build-system gnu-build-system)
    (arguments
     `(#:tests? #f
-      #:phases (modify-phases %standard-phases
-                 (replace 'configure
-                   (lambda* (#:key outputs #:allow-other-keys)
-                     (substitute* "common.mk"
-                       (("/bin/echo") (which "echo")))
-                     (substitute* "include/module.mk"
-                       (("\\$\\(DESTDIR\\)/usr/")
-			(string-append (assoc-ref outputs "out") "/")))
-                     (substitute* "src/module.mk"
-                       (("\\$\\(DESTDIR\\)")
-			(string-append (assoc-ref outputs "out") "/"))))))))
+      #:phases
+      (modify-phases %standard-phases
+        (replace 'configure
+                 (lambda* (#:key outputs #:allow-other-keys)
+                          (substitute* "common.mk"
+                                       (("/bin/echo") (which "echo")))
+                          (substitute* "include/module.mk"
+                                       (("\\$\\(DESTDIR\\)/usr/")
+                                        (string-append (assoc-ref outputs "out") "/")))
+                          (substitute* "src/module.mk"
+                                       (("\\$\\(DESTDIR\\)")
+                                        (string-append (assoc-ref outputs "out") "/"))))))))
    (home-page "https://github.com/hugegreenbug/libevdevc")
    (synopsis "chromiumos libevdev for linux")
    (description "chromiumos libevdev for linux")
@@ -99,14 +99,15 @@
     `(("jsoncpp" ,jsoncpp)))
    (arguments
     `(#:tests? #f
-      #:phases (modify-phases %standard-phases
-                 (replace 'configure
-                   (lambda* (#:key outputs #:allow-other-keys)
-                            (substitute* "Makefile"
-                                         (("DESTDIR = ")
-                                          (string-append "DESTDIR = " (assoc-ref outputs "out"))))
-                            (substitute* "include/gestures/include/finger_metrics.h"
-                                         (("vector.h\"") "vector.h\"\n#include <math.h>")))))))
+      #:phases
+      (modify-phases %standard-phases
+        (replace 'configure
+                 (lambda* (#:key outputs #:allow-other-keys)
+                          (substitute* "Makefile"
+                                       (("DESTDIR = ")
+                                        (string-append "DESTDIR = " (assoc-ref outputs "out"))))
+                          (substitute* "include/gestures/include/finger_metrics.h"
+                                       (("vector.h\"") "vector.h\"\n#include <math.h>")))))))
    (home-page "https://github.com/hugegreenbug/libgestures")
    (synopsis "chromiumos libgestures for linux")
    (description "chromiumos libgestures for linux")
@@ -122,20 +123,22 @@
      (uri (string-append "mirror://sourceforge/qt5ct/qt5ct-" version ".tar.bz2"))
      (sha256 (base32 "0xzgd12cvm4vyzl8qax6izdmaf46bf18h055z6k178s8pybm1sqw"))))
    (build-system gnu-build-system)
+   (native-inputs
+    `(("qttools" ,qttools)))
    (inputs
-    `(("qt" ,qt)
+    `(("qtbase" ,qtbase)
       ("qtsvg" ,qtsvg)))
-   ;(arguments
-   ; `(#:phases (alist-cons-after
-   ;             'unpack 'fix-docdir
-   ;             (lambda _
-   ;               ;; Although indent uses a modern autoconf in which docdir
-   ;               ;; defaults to PREFIX/share/doc, the doc/Makefile.am
-   ;               ;; overrides this to be in PREFIX/doc.  Fix this.
-   ;               (substitute* "doc/Makefile.in"
-   ;                 (("^docdir = .*$") "docdir = @docdir@\n")))
-   ;             %standard-phases)))
+   (arguments
+    `(#:tests? #f
+      #:phases
+      (modify-phases %standard-phases
+        (replace 'configure
+                 (lambda (#:key outputs #:allow-other-keys)
+                   (invoke "qmake"
+                           "CONFIG+=packaging"
+                           (string-append "BASEDIR=" (assoc-ref outputs "out"))
+                           "PREFIX=/"))))))
+   (home-page "https://qt5ct.sourceforge.io/")
    (synopsis "Qt5 Configuration Tool")
    (description "This program allows users to configure Qt5 settings (theme, font, icons, etc.) under DE/WM without Qt integration.")
-   (license license:bsd)
-   (home-page "https://qt5ct.sourceforge.io/")))
+   (license license:bsd)))
